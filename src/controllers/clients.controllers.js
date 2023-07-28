@@ -10,6 +10,7 @@ export async function showCustomers(req,res) {
     console.log(err)
   }
 }
+
 export async function showCustomer(req,res) {
 
   const { id } = req.params
@@ -44,10 +45,11 @@ export async function updateCustomer(req, res) {
   try{
     const user = await db.query(`SELECT * FROM customers WHERE id = $1`, [id])
 
+    if(!user || !user.cpf) return res.status(400).send("Verifique seus dados e tente novamente!")
+
     if (user.cpf !== cpf) return res.status(409).send("Verifique seus dados e tente novamente!")
 
     await db.query(`UPDATE customers name = $1, phone = $2, birthday = $3 WHERE id = $4`, [name, phone, birthday, id])
-    
   } catch (err) {
     console.log(err)
   }
