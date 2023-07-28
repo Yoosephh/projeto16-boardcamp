@@ -2,7 +2,7 @@ import { db } from "../database/database.js"
 
 export async function showCustomers(req,res) {
   try{
-    const customersList = await db.query(`SELECT * FROM customers`)
+    const customersList = await db.query(`SELECT id, name, phone, cpf, TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday FROM customers`)
 
     res.status(200).send(customersList.rows)
 
@@ -17,6 +17,7 @@ export async function showCustomer(req,res) {
 
   try{
     const customer = await db.query(`SELECT * FROM customers WHERE customers.id = $1`, [id])
+    if (!customer) return res.status(404).send("Usuario não encontrado no sistema!")
 
     res.status(200).send(customer.rows)
 
@@ -28,7 +29,7 @@ export async function showCustomer(req,res) {
 export async function newCustomer(req, res) {
   const { name, phone, cpf, birthday } = req.body
   try{
-    const checkCustomer = await db.query(`SELECT * FROM customers WHERE cpf = $1`, [cpf])
+    const checkCustomer = await db.query(`SELECT id, name, phone, cpf, TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday FROM customers WHERE cpf = $1`, [cpf])
     if (checkCustomer.rows.length > 0) return res.status(409).send("Usuario já cadastrado!")
 
     await db.query(`INSERT INTO customers (name, phone, cpf, birthday) VALUES ($1, $2, $3, $4)`, [name, phone, cpf, birthday])
