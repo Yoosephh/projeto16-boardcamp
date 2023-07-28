@@ -19,7 +19,7 @@ export async function showCustomer(req,res) {
     const customer = await db.query(`SELECT * FROM customers WHERE customers.id = $1`, [id])
     if (!customer) return res.status(404).send("Usuario não encontrado no sistema!")
 
-    res.status(200).send(customer.rows)
+    res.status(200).send(customer.rows[0])
 
   } catch (err) {
     console.log(err)
