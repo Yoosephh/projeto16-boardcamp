@@ -5,7 +5,7 @@ import rentalsRouter from "./rentals.routes.js";
 
 const router = Router();
 
-// router.use(clientsRouter)
+router.use(clientsRouter)
 router.use(gamesRouter)
 // router.use(rentalsRouter)
 
