@@ -31,8 +31,18 @@ export async function newRent(req,res) {
 }
 
 export async function closeRent(req,res) {
-  try{
+  const { customerId, gameId, daysRented } = req.body;
 
+  try{
+    if (Number(daysRented) <= 0) return res.status(400).send("O numero de dias alugados está inconsistente")
+    const checkCustomer = await db.query(`SELECT id FROM customers WHERE id = $1`, [customerId])
+    const checkGame = await db.query(`SELECT id, "stockTotal", "pricePerDay" FROM games WHERE id = $1`, [gameId])
+    if(checkCustomer.rows.length === 0 || checkGame.rows.length === 0) return res.sendStatus(400)
+    if(checkGame.rows[0].stockTotal >= 0) return res.sendStatus(400)
+
+    await db.query(`INSERT INTO rentals ("customerId", "gameId", "daysRented", "rentDate", "returnDate", "delayFee", "originalPrice") VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, [customerId, gameId, daysRented, dayjs().format('YYYY-MM-DD'), null, null, (checkGame.rows[0].pricePerDay * daysRented) ])
+
+  res.status(200).send("Devolução efetuada com sucesso!")
   } catch(err){
     console.log(err)
   }

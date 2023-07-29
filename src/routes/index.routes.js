@@ -7,6 +7,6 @@ const router = Router();
 
 router.use(clientsRouter)
 router.use(gamesRouter)
-// router.use(rentalsRouter)
+router.use(rentalsRouter)
 
 export default router
