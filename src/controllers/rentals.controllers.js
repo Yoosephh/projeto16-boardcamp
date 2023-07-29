@@ -61,11 +61,10 @@ export async function closeRent(req, res) {
   try {
     if (Number(daysRented) <= 0) return res.status(400).send("O numero de dias alugados está inconsistente");
 
-    const checkRent = await db.query(`SELECT id, "delayFee", "returnDate", FROM customers WHERE id = $1`, [id]);
+    const checkRent = await db.query(`SELECT id, "delayFee", "returnDate" FROM rentals WHERE id = $1`, [id]);
+    if(!checkRent.rows[0].id) return res.status(404).send("Não é possível finalizar um aluguel que não foi registrado!")
+    if(checkRent.rows[0].delayFee) return res.status(400).send("Não é possível finalizar um aluguel que já foi finalizado!")
 
-    if (checkCustomer.rows.length === 0 || checkGame.rows.length === 0) return res.sendStatus(400);
-
-    const originalPrice = checkGame.rows[0].pricePerDay * (daysRented);
     const delayDays = dayjs(returnDate).diff(dayjs().format('YYYY-MM-DD'), 'days');
     const delayFee = delayDays > 0 ? delayDays * checkGame.rows[0].pricePerDay : 0;
 
