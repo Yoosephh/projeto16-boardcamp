@@ -62,19 +62,25 @@ export async function closeRent(req, res) {
 
   try {
     const checkRent = await db.query(
-      `SELECT id,"customerId", "gameId", "delayFee","daysRented","originalPrice", TO_CHAR("rentDate", 'YYYY-MM-DD') AS "rentDate" FROM rentals WHERE id = $1`,
+      `SELECT id,"customerId", "gameId", "delayFee","daysRented","originalPrice", TO_CHAR("rentDate", 'YYYY-MM-DD') AS "rentDate" 
+      FROM rentals WHERE id = $1`,
       [id]
     );
     if (checkRent.rows[0].length === 0) return res.status(404).send("Não é possível finalizar um aluguel que não foi registrado!");
-    if (delayFee !== null) return res.status(400).send("Não é possível finalizar um aluguel que já foi finalizado!");
-    
+
     let {delayFee, daysRented, originalPrice, rentDate, customerId, gameId} = checkRent.rows[0]
+    if (delayFee !== null) return res.status(400).send("Não é possível finalizar um aluguel que já foi finalizado!");
 
     const diaAlugel = dayjs(rentDate);
+
     const pricePerDay = (originalPrice / daysRented)
+
     const returnDate = dayjs().format('YYYY-MM-DD')
+
     const shouldReturnDay = diaAlugel.add(daysRented, 'day').format('YYYY-MM-DD');
+
     const delayDays = dayjs().diff(shouldReturnDay, 'days');
+
     delayFee = delayDays > 0 ? delayDays * pricePerDay : 0;
 
     originalPrice = originalPrice + delayFee
