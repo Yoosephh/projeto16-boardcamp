@@ -29,7 +29,7 @@ export async function showCustomer(req,res) {
 export async function newCustomer(req, res) {
   const { name, phone, cpf, birthday } = req.body
   try{
-    const checkCustomer = await db.query(`SELECT id, name, phone, cpf, TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday FROM customers WHERE cpf = $1`, [cpf])
+    const checkCustomer = await db.query(`SELECT cpf FROM customers WHERE cpf = $1`, [cpf])
     if (checkCustomer.rows.length > 0) return res.status(409).send("Usuario já cadastrado!")
 
     await db.query(`INSERT INTO customers (name, phone, cpf, birthday) VALUES ($1, $2, $3, $4)`, [name, phone, cpf, birthday])
@@ -44,17 +44,18 @@ export async function updateCustomer(req, res) {
   const { name, phone, cpf, birthday } = req.body
   const { id } = req.params
   try{
-    const user = await db.query(`SELECT id, name, phone, cpf, TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday FROM customers WHERE id = $1`, [id])
+    const user = await db.query(`SELECT id , cpf FROM customers WHERE id = $1`, [id])
 
     if(user.rows.length === 0) return res.status(400).send("Verifique seus dados e tente novamente!")
 
-    if (user.rows.cpf !== cpf) return res.status(409).send("Verifique seus dados e tente novamente!")
+    if (user.rows[0].cpf !== cpf) return res.status(409).send("Verifique seus dados e tente novamente!")
+
 
     await db.query(`UPDATE customers name = $1, phone = $2, birthday = $3 WHERE id = $4`, [name, phone, birthday, id])
 
   } catch (err) {
 
     console.log(err)
-    
+
   }
 }
