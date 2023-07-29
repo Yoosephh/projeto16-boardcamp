@@ -1,9 +1,10 @@
 import {Router} from "express"
+import { newRent, sendRents } from "../controllers/rentals.controllers";
 
 const rentalsRouter = Router();
 
-// rentalsRouter.post("/games",)
-// rentalsRouter.get("/rentals",)
+rentalsRouter.post("/rentals", newRent)
+rentalsRouter.get("/rentals", sendRents)
 // rentalsRouter.put("/rentals/:id/return")
 // rentalsRouter.delete("/rentals/:id")
 
