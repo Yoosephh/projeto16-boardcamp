@@ -65,10 +65,10 @@ export async function closeRent(req, res) {
       `SELECT id,"customerId", "gameId", "delayFee","daysRented","originalPrice", TO_CHAR("rentDate", 'YYYY-MM-DD') AS "rentDate" FROM rentals WHERE id = $1`,
       [id]
     );
+    if (checkRent.rows[0].length === 0) return res.status(404).send("Não é possível finalizar um aluguel que não foi registrado!");
+    if (delayFee !== null) return res.status(400).send("Não é possível finalizar um aluguel que já foi finalizado!");
+    
     let {delayFee, daysRented, originalPrice, rentDate, customerId, gameId} = checkRent.rows[0]
-
-    if (!checkRent.rows[0]) return res.status(404).send("Não é possível finalizar um aluguel que não foi registrado!");
-    if (delayFee) return res.status(400).send("Não é possível finalizar um aluguel que já foi finalizado!");
 
     const diaAlugel = dayjs(rentDate);
     const pricePerDay = (originalPrice / daysRented)
@@ -96,6 +96,11 @@ export async function deleteRent(req, res) {
   const { id } = req.params;
 
   try {
+    const finishedRent = await db.query(`SELECT "returnDate", id FROM rentals WHERE id = $1`, [id]);
+    if (!finishedRent.rows[0].id) return res.status(404).send("Registro não encontrado!");
+
+    if(finishedRent.rows[0].returnDate === null) return res.status(400).send("O registro de aluguel ainda não foi finalizado!");
+
     await db.query(`DELETE FROM rentals WHERE id = $1`, [id]);
 
     return res.status(200).send("Registro deletado com sucesso!");
