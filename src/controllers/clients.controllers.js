@@ -51,7 +51,10 @@ export async function updateCustomer(req, res) {
     if (user.rows.cpf !== cpf) return res.status(409).send("Verifique seus dados e tente novamente!")
 
     await db.query(`UPDATE customers name = $1, phone = $2, birthday = $3 WHERE id = $4`, [name, phone, birthday, id])
+
   } catch (err) {
+
     console.log(err)
+    
   }
 }
