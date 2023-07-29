@@ -1,3 +1,4 @@
+import dayjs from "dayjs"
 import { db } from "../database/database.js"
 
 export async function sendRents(req,res) {
@@ -17,11 +18,11 @@ export async function newRent(req,res) {
   try{
     if (Number(daysRented) <= 0) return res.status(400).send("O numero de dias alugados está inconsistente")
     const checkCustomer = await db.query(`SELECT id FROM customers WHERE id = $1`, [customerId])
-    const checkGame = await db.query(`SELECT id, "stockTotal" FROM games WHERE id = $1`, [gameId])
+    const checkGame = await db.query(`SELECT id, "stockTotal", "pricePerDay" FROM games WHERE id = $1`, [gameId])
     if(checkCustomer.rows.length === 0 || checkGame.rows.length === 0) return res.sendStatus(400)
-    if(checkGame.rows.stockTotal >= 0) return res.sendStatus(400)
+    if(checkGame.rows[0].stockTotal >= 0) return res.sendStatus(400)
 
-    const rent = await db.query(`INSERT INTO rentals ("customerId", "gameId", "daysRented") VALUES ($1, $2, $3) RETURNING id`, [customerId, gameId, daysRented])
+    await db.query(`INSERT INTO rentals ("customerId", "gameId", "daysRented", "rentDate", "returnDate", "delayFee", "originalPrice") VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, [customerId, gameId, daysRented, dayjs().format('YYYY-MM-DD'), null, null, (checkGame.rows[0].pricePerDay * daysRented) ])
 
     res.status(201).send("Reserva realizada com sucesso! Divirta-se com os jogos :D")
   } catch(err){
