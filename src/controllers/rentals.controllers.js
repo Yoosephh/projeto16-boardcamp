@@ -55,25 +55,34 @@ export async function newRent(req,res) {
 }
 
 export async function closeRent(req, res) {
-  const { id } = req.params
-  const { customerId, gameId, daysRented } = req.body;
+  const { id } = req.params;
+  const { customerId, gameId } = req.body;
 
   try {
-    if (Number(daysRented) <= 0) return res.status(400).send("O numero de dias alugados está inconsistente");
+    const checkRent = await db.query(
+      `SELECT id, "delayFee","daysRented","originalPrice", TO_CHAR("rentDate", 'YYYY-MM-DD') AS "rentDate" FROM rentals WHERE id = $1`,
+      [id]
+    );
+    const {delayFee, daysRented, originalPrice, rentDate} = checkRent.rows[0]
 
-    const checkRent = await db.query(`SELECT id, "delayFee", "returnDate" FROM rentals WHERE id = $1`, [id]);
-    if(!checkRent.rows[0].id) return res.status(404).send("Não é possível finalizar um aluguel que não foi registrado!")
-    if(checkRent.rows[0].delayFee) return res.status(400).send("Não é possível finalizar um aluguel que já foi finalizado!")
+    if (!checkRent.rows[0]) return res.status(404).send("Não é possível finalizar um aluguel que não foi registrado!");
+    if (delayFee) return res.status(400).send("Não é possível finalizar um aluguel que já foi finalizado!");
 
-    const delayDays = dayjs(returnDate).diff(dayjs().format('YYYY-MM-DD'), 'days');
-    const delayFee = delayDays > 0 ? delayDays * checkGame.rows[0].pricePerDay : 0;
+    const diaAlugel = dayjs(rentDate);
+    const pricePerDay = (originalPrice / daysRented)
+
+    const shouldReturnDay = diaAlugel.add(daysRented, 'day').format('YYYY-MM-DD');
+    const delayDays = dayjs().diff(shouldReturnDay, 'days');
+    delayFee = delayDays > 0 ? delayDays * pricePerDay : 0;
+
+    originalPrice = originalPrice + delayFee
 
     await db.query(
-      `UPDATE rentals SET "returnDate" = $1, "delayFee" = $2, WHERE "customerId" = $3 AND "gameId" = $4`,
-      [dayjs().format('YYYY-MM-DD'), delayFee, customerId, gameId]
+      `UPDATE rentals SET "returnDate" = $1, "delayFee" = $2, "originalPrice" = $5 WHERE "customerId" = $3 AND "gameId" = $4`,
+      [dayjs().format('YYYY-MM-DD'), delayFee, customerId, gameId, originalPrice]
     );
 
-    await db.query(`UPDATE games SET "stockTotal" = $1 WHERE id = $2`, [(checkGame.rows[0].stockTotal + 1), gameId]);
+    await db.query(`UPDATE games SET "stockTotal" += 1 WHERE id = $1`, [gameId]);
 
     res.status(200).send("Devolução efetuada com sucesso!");
   } catch (err) {
