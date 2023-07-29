@@ -3,7 +3,7 @@ import { db } from "../database/database.js"
 export async function sendGames(req, res) {
   try{
 
-    const gamesList = await db.query("SELECT * FROM games;")
+    const gamesList = await db.query("SELECT * FROM games ORDER BY id ASC;")
 
     console.log(gamesList.rows)
 

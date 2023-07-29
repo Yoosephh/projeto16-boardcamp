@@ -1,8 +1,9 @@
+import dayjs from "dayjs"
 import { db } from "../database/database.js"
 
 export async function showCustomers(req,res) {
   try{
-    const customersList = await db.query(`SELECT id, name, phone, cpf, TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday FROM customers`)
+    const customersList = await db.query(`SELECT id, name, phone, cpf, TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday FROM customers ORDER BY id ASC`)
 
     res.status(200).send(customersList.rows)
 
@@ -50,8 +51,8 @@ export async function updateCustomer(req, res) {
     if(userId.rows.length === 0) return res.status(400).send("Verifique seus dados e tente novamente!")
   
     if (userCPF.rows.length > 0 && Number(id) !== userCPF.rows[0].id) return res.status(409).send("Verifique seus dados e tente novamente!")
-
-    await db.query(`UPDATE customers SET name = $1, phone = $2, birthday = $3 WHERE id = $4`, [name, phone, birthday, id])
+    const formatedBirthday = dayjs(birthday).format('YYYY-MM-DD')
+    await db.query(`UPDATE customers SET name = $1, phone = $2, birthday = $3 WHERE id = $4`, [name, phone, formatedBirthday, id])
     return res.status(200).send("Dado(s) atualizado(s) com sucesso :)")
   } catch (err) {
 

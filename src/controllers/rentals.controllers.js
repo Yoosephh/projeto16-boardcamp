@@ -23,6 +23,7 @@ export async function sendRents(req,res) {
       ON rentals."gameId" = games.id
     JOIN customers
       ON rentals."customerId" = customers.id
+    ORDER BY rentals.id ASC
   `);
 
     res.status(200).send(rents.rows)
@@ -66,7 +67,7 @@ export async function closeRent(req, res) {
       FROM rentals WHERE id = $1`,
       [id]
     );
-    if (checkRent.rows[0].length === 0) return res.status(404).send("Não é possível finalizar um aluguel que não foi registrado!");
+    if (checkRent.rows.length === 0) return res.status(404).send("Não é possível finalizar um aluguel que não foi registrado!");
 
     let {delayFee, daysRented, originalPrice, rentDate, customerId, gameId} = checkRent.rows[0]
     if (delayFee !== null) return res.status(400).send("Não é possível finalizar um aluguel que já foi finalizado!");
@@ -84,7 +85,6 @@ export async function closeRent(req, res) {
     delayFee = delayDays > 0 ? delayDays * pricePerDay : 0;
 
     originalPrice = originalPrice + delayFee
-    console.log(returnDate)
     await db.query(
       `UPDATE rentals SET "returnDate" = $1, "delayFee" = $2, "originalPrice" = $5 WHERE "customerId" = $3 AND "gameId" = $4`,
       [returnDate, delayFee, customerId, gameId, originalPrice]
@@ -103,7 +103,7 @@ export async function deleteRent(req, res) {
 
   try {
     const finishedRent = await db.query(`SELECT "returnDate", id FROM rentals WHERE id = $1`, [id]);
-    if (!finishedRent.rows[0].id) return res.status(404).send("Registro não encontrado!");
+    if (finishedRent.rows.length === 0) return res.status(404).send("Registro não encontrado!");
 
     if(finishedRent.rows[0].returnDate === null) return res.status(400).send("O registro de aluguel ainda não foi finalizado!");
 
