@@ -51,7 +51,9 @@ export async function updateCustomer(req, res) {
     if(userId.rows.length === 0) return res.status(400).send("Verifique seus dados e tente novamente!")
   
     if (userCPF.rows.length > 0 && Number(id) !== userCPF.rows[0].id) return res.status(409).send("Verifique seus dados e tente novamente!")
-    const formatedBirthday = dayjs(birthday).format('YYYY-MM-DD')
+
+    const formatedBirthday = birthday.slice(0, 10)
+
     await db.query(`UPDATE customers SET name = $1, phone = $2, birthday = $3 WHERE id = $4`, [name, phone, formatedBirthday, id])
     return res.status(200).send("Dado(s) atualizado(s) com sucesso :)")
   } catch (err) {
