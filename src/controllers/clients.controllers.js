@@ -54,7 +54,7 @@ export async function updateCustomer(req, res) {
 
     const formatedBirthday = birthday.slice(0, 10)
 
-    await db.query(`UPDATE customers SET name = $1, phone = $2, birthday = $3 WHERE id = $4`, [name, phone, formatedBirthday, id])
+    await db.query(`UPDATE customers SET name = $1, phone = $2, birthday = TO_DATE($3, 'YYYY-MM-DD') WHERE id = $4`, [name, phone, formatedBirthday, id])
     return res.status(200).send("Dado(s) atualizado(s) com sucesso :)")
   } catch (err) {
 
